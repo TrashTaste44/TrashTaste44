@@ -36,7 +36,7 @@ FONT = next((str(path) for path in font_paths if path and path.is_file()), None)
 if FONT is None:
     raise RuntimeError('Install fonts-dejavu-core or pass --font /path/to/monospace.ttf')
 def font(size): return ImageFont.truetype(FONT, size)
-bg, panel, ink, muted, border = '#0d1117', '#161b22', '#e6e6e6', '#9299a1', '#515a64'
+bg, panel, ink, muted, border = '#000000', '#161b22', '#e6e6e6', '#9299a1', '#515a64'
 language_height = max(150, 80 + 30 * len(display_languages))
 language_bottom = 650 + language_height
 base = Image.new('RGB', (900, language_bottom + 35), bg)
@@ -137,7 +137,7 @@ for frame in range(len(route)):
     draw.rectangle((x-8,y-8,x+8,y+8),fill='#ededed')
     for side in (-4,4):
         ex,ey=local(4,side)
-        draw.rectangle((ex-1,ey-1,ex+1,ey+1),fill='#0d1117')
+        draw.rectangle((ex-1,ey-1,ex+1,ey+1),fill=bg)
     frames.append(im.quantize(palette=palette,dither=Image.Dither.NONE))
 gif_path=OUT/'profile.gif'
 temporary=OUT/'profile.tmp.gif'

@@ -1,0 +1,57 @@
+name: Refresh profile animation
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/**'
+      - '.github/workflows/profile.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: profile-animation
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+      - name: Install renderer dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fonts-dejavu-core
+          python -m pip install -r scripts/requirements.txt
+      - name: Test generator
+        run: python -m unittest discover -s tests -v
+      - name: Fetch aggregate GitHub stats
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PROFILE_USERNAME: ${{ github.repository_owner }}
+        run: python scripts/fetch_stats.py --username "$PROFILE_USERNAME"
+      - name: Render animation and accessible versions
+        run: python scripts/render_profile.py
+      - name: Commit refreshed assets
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/profile.gif assets/profile.png assets/profile-stats.json assets/profile-summary.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Refresh profile animation'
+            git push origin "HEAD:$DEFAULT_BRANCH"
+          fi

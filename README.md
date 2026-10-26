@@ -53,16 +53,26 @@ Focus: Cybersecurity, networking, Linux, network security, and practical penetra
 Status: Probably 0nline
 ```
 
-## Current Project(s) to check out:
-
-### Total-Sense
-Open-source browser extension for one-click website reputation checks using the user's own VirusTotal API key.
-
-```txt
-Goal: Make checking sketchy links faster, easier, and safer.
-Stack: JavaScript | HTML | CSS | VirusTotal API
-```
-
----
-
 </div>
+
+<p align="center">
+  <img src="assets/profile.gif" width="900" alt="Total-Sense project showcase, last 30 days of GitHub contributions, and public repository language totals. A monochrome pixel snake eats apples along the panel borders." />
+</p>
+
+<p align="center">
+  <a href="assets/profile.png">Still version</a> · <a href="assets/profile-summary.md">Stats as text</a>
+</p>
+
+<details>
+<summary>About the project and stats</summary>
+
+**Total-Sense** — Check the sketchy link before you click.
+
+A browser extension for one-click website reputation checks using your own
+VirusTotal API key. Stack: JavaScript / HTML / CSS / VirusTotal API.
+
+Activity and language stats refresh daily through GitHub Actions. Language shares
+use code bytes from public, owned, non-fork repositories. The snake is decorative;
+its movement does not represent contributions. The image includes its data date.
+
+</details>

@@ -74,16 +74,29 @@ class AnimationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)
             self.render(folder, [])
+            with Image.open(folder / 'profile.png') as still:
+                self.assertEqual(still.convert('RGBA').getpixel((0,0))[3],0)
+                self.assertEqual(still.convert('RGBA').getpixel((50,100))[3],255)
             with Image.open(folder / 'profile.gif') as gif:
                 self.assertGreater(gif.n_frames, 300)
                 self.assertEqual(gif.info['loop'], 0)
                 # Includes heading text, descenders, and its surrounding whitespace.
                 regions = [(30, 288, 430, 327), (30, 590, 430, 632)]
-                expected = [gif.convert('RGB').crop(region).tobytes() for region in regions]
+                def visible_region(region):
+                    crop=gif.convert('RGBA').crop(region)
+                    matte=Image.new('RGBA',crop.size,(1,4,9,255))
+                    return Image.alpha_composite(matte,crop).tobytes()
+                expected = [visible_region(region) for region in regions]
                 for index in range(gif.n_frames):
                     gif.seek(index)
+                    self.assertEqual(gif.convert('RGBA').getpixel((0,0))[3],0)
+                    self.assertEqual(gif.convert('RGBA').getpixel((50,100))[3],255)
+                    # The initial tail occupies this gutter pixel. It must clear
+                    # once the snake moves to the opposite side of the panel.
+                    if index==40:
+                        self.assertEqual(gif.convert('RGBA').getpixel((14,100))[3],0)
                     for region, pixels in zip(regions, expected):
-                        self.assertEqual(gif.convert('RGB').crop(region).tobytes(), pixels,
+                        self.assertEqual(visible_region(region), pixels,
                                          f'Snake overlaps heading in frame {index}')
             summary = (folder / 'profile-summary.md').read_text()
             self.assertIn('no language bytes', summary)

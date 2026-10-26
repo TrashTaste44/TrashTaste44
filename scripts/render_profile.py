@@ -1,6 +1,6 @@
 """Render a monochrome profile animation from fetched aggregate GitHub stats."""
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFont, GifImagePlugin
 import argparse
 from datetime import date, timedelta
 import json
@@ -36,7 +36,9 @@ FONT = next((str(path) for path in font_paths if path and path.is_file()), None)
 if FONT is None:
     raise RuntimeError('Install fonts-dejavu-core or pass --font /path/to/monospace.ttf')
 def font(size): return ImageFont.truetype(FONT, size)
-bg, panel, ink, muted, border = '#000000', '#161b22', '#e6e6e6', '#9299a1', '#515a64'
+# A dark matte keeps antialiased text edges clean; exact matte pixels become
+# transparent in both outputs, so GitHub supplies the actual page background.
+bg, panel, ink, muted, border = '#010409', '#161b22', '#e6e6e6', '#9299a1', '#515a64'
 language_height = max(150, 80 + 30 * len(display_languages))
 language_bottom = 650 + language_height
 base = Image.new('RGB', (900, language_bottom + 35), bg)
@@ -113,8 +115,19 @@ for _,length,a,b in segments:
 apple_steps=[min(range(len(route)),key=lambda i:math.dist(route[i],point(a))) for a in apple_distances]
 frames=[]
 palette=base.quantize(colors=48)
+matte=Image.new('RGB',base.size,bg)
+def equal_pixels(im,reference):
+    red,green,blue=ImageChops.difference(im,reference).split()
+    difference=ImageChops.lighter(ImageChops.lighter(red,green),blue)
+    return difference.point(lambda value: 255 if value==0 else 0)
+
 # A still version lets visitors read the same stats without motion.
-base.save(OUT/'profile.png')
+still=base.convert('RGBA')
+still.putalpha(ImageChops.invert(equal_pixels(base,matte)))
+still.save(OUT/'profile.png')
+static=base.quantize(palette=palette,dither=Image.Dither.NONE)
+static.paste(255,mask=equal_pixels(base,matte))
+static.info['transparency']=255
 for frame in range(len(route)):
     im=base.copy(); draw=ImageDraw.Draw(im)
     eaten=sum(a<=frame for a in apple_steps)
@@ -137,11 +150,32 @@ for frame in range(len(route)):
     draw.rectangle((x-8,y-8,x+8,y+8),fill='#ededed')
     for side in (-4,4):
         ex,ey=local(4,side)
-        draw.rectangle((ex-1,ey-1,ex+1,ey+1),fill=bg)
-    frames.append(im.quantize(palette=palette,dither=Image.Dither.NONE))
+        draw.rectangle((ex-1,ey-1,ex+1,ey+1),fill='#000000')
+    indexed=im.quantize(palette=palette,dither=Image.Dither.NONE)
+    # Each sprite frame contains only the snake and remaining apples. Restoring
+    # the static canvas after each sprite avoids trails and repeated graph data.
+    indexed.paste(255,mask=equal_pixels(im,base))
+    indexed.info['transparency']=255
+    bounds=indexed.point(lambda value: 0 if value==255 else 255).getbbox()
+    if not bounds:
+        raise RuntimeError('Animation sprite unexpectedly empty')
+    frames.append((indexed.crop(bounds),bounds[:2]))
 gif_path=OUT/'profile.gif'
 temporary=OUT/'profile.tmp.gif'
-frames[0].save(temporary,save_all=True,append_images=frames[1:],duration=90,loop=0,optimize=True,disposal=1)
+# Encode complete sprite bounds explicitly: ordinary frame-difference cropping
+# can drop unchanged apples even though restore-previous removes the last sprite.
+with temporary.open('wb') as output:
+    header,_=GifImagePlugin.getheader(static,info={
+        'loop':0,'transparency':255,'background':255,'optimize':False})
+    for block in header:
+        output.write(block)
+    for block in GifImagePlugin.getdata(static,duration=10,disposal=1,transparency=255):
+        output.write(block)
+    for sprite,offset in frames:
+        for block in GifImagePlugin.getdata(sprite,offset=offset,duration=90,
+                                           disposal=3,transparency=255):
+            output.write(block)
+    output.write(b';')
 temporary.replace(gif_path)
 summary=[
     '# Profile stats', '',

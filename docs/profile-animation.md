@@ -5,6 +5,9 @@ generated monochrome GIF: a project showcase, a 30-day contribution graph, and
 language bars. A classic pixel snake follows a fixed route along panel borders
 and through the left gutter, eats apples, and grows. It is a looping animation,
 not an interactive game. The snake is decorative and does not encode activity.
+The outer canvas is transparent in both the GIF and PNG so it blends into the
+GitHub page. Dark project and graph panels remain opaque. Sprite frames restore
+the static canvas between steps so the snake cannot leave trails.
 
 ## Automatic updates
 

@@ -3,7 +3,7 @@
 Total-Sense: one-click website reputation checks using your own VirusTotal API key.
 Stack: JavaScript / HTML / CSS / VirusTotal API.
 
-Updated: 2026-10-26T20:10:08+00:00 (UTC). Source: GitHub GraphQL API.
+Updated: 2026-10-26T20:11:33+00:00 (UTC). Source: GitHub GraphQL API.
 
 ## Activity
 
@@ -40,7 +40,7 @@ Counts reflect the contribution calendar visible on GitHub, including anonymized
 | 2026-10-23 | 0 |
 | 2026-10-24 | 0 |
 | 2026-10-25 | 0 |
-| 2026-10-26 | 1 |
+| 2026-10-26 | 2 |
 
 ## Languages
 
@@ -48,8 +48,9 @@ Public owned non-fork repositories; share of GitHub language bytes.
 
 | Language | Share of bytes |
 | --- | ---: |
-| JavaScript | 49.4% |
-| CSS | 32.6% |
-| HTML | 14.7% |
-| PowerShell | 3.1% |
+| Python | 38.9% |
+| JavaScript | 30.2% |
+| CSS | 19.9% |
+| HTML | 9.0% |
+| PowerShell | 1.9% |
 | Batchfile | 0.2% |
